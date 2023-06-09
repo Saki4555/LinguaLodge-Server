@@ -33,6 +33,8 @@ async function run() {
     // collections
     const usersCollection = client.db('lodgeDb').collection('users');
     const classesCollection = client.db('lodgeDb').collection('classes');
+    const selectedClass = client.db('lodgeDb').collection('selectedClass');
+
 
     app.post('/users', async (req, res) => {
         const user = req.body;
@@ -48,9 +50,16 @@ async function run() {
       });
 
       app.get('/classes', async (req, res) => {
-        const result = await classesCollection.find().toArray();
+        const result = await classesCollection.find({ status: 'Approved' }).toArray();
         res.send(result);
-      })
+      });
+
+      app.post('/selected', async (req, res) => {
+        const item = req.body;
+        // console.log(item);
+        const result = await selectedClass.insertOne(item);
+        res.send(result);
+      });
 
     
 
