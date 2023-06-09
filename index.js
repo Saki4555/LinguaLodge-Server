@@ -67,6 +67,12 @@ async function run() {
       res.send(result);
     });
 
+    app.post('/classes', async (req, res) => {
+      const newClass = req.body;
+      const result = await classesCollection.insertOne(newClass);
+      res.send(result);
+    });
+
     app.post('/selected', async (req, res) => {
       const item = req.body;
       // console.log(item);
@@ -78,6 +84,16 @@ async function run() {
       const result = await selectedClass.find().toArray();
       res.send(result);
     });
+
+    app.get('/classes/:email', async (req, res) => {
+      const email = req.params.email;
+      // console.log(email);
+
+      const query = { instructor_email: email };
+      const cursor = await classesCollection.find(query).toArray();
+      res.send(cursor);
+    })
+
 
     app.delete('/selected/:id', async (req, res) => {
       const id = req.params.id;
