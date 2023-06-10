@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middlewares
@@ -56,7 +57,7 @@ async function run() {
       // console.log(email);
       const query = { email: email };
       const result = await usersCollection.findOne(query);
-      
+
       res.send(result);
     });
 
@@ -129,6 +130,8 @@ async function run() {
       res.send(result);
     });
 
+  
+
     app.get('/allclasses', async (req, res) => {
       const result = await classesCollection.find().toArray();
       res.send(result);
@@ -147,6 +150,12 @@ async function run() {
 
     app.post('/instructors', async (req, res) => {
       const newInstructor = req.body;
+      const query = { email: newInstructor.email }
+      const existingUser = await instructorCollection.findOne(query);
+      if (existingUser) {
+        // console.log(existingUser);
+        return res.send({ message: 'instructor already exists' })
+      }
       const result = await instructorCollection.insertOne(newInstructor);
       res.send(result);
     });
@@ -159,6 +168,27 @@ async function run() {
       const result = await selectedClass.deleteOne(query);
       res.send(result);
     });
+
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseFloat(price * 100);
+
+      // console.log(price, amount);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      },
+        // {
+        //   apiKey: process.env.PAYMENT_SECRET_KEY
+        // }
+      );
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
+
 
 
 
