@@ -34,6 +34,7 @@ async function run() {
     const usersCollection = client.db('lodgeDb').collection('users');
     const classesCollection = client.db('lodgeDb').collection('classes');
     const selectedClass = client.db('lodgeDb').collection('selectedClass');
+    const instructorCollection = client.db('lodgeDb').collection('instructor');
 
     // users ---------
 
@@ -142,7 +143,13 @@ async function run() {
       const query = { instructor_email: email };
       const cursor = await classesCollection.find(query).toArray();
       res.send(cursor);
-    })
+    });
+
+    app.post('/instructors', async (req, res) => {
+      const newInstructor = req.body;
+      const result = await instructorCollection.insertOne(newInstructor);
+      res.send(result);
+    });
 
 
     app.delete('/selected/:id', async (req, res) => {
