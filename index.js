@@ -68,7 +68,7 @@ async function run() {
     app.patch('/users/role/:id', async (req, res) => {
       const id = req.params.id;
       let roleToUpdate = req.body.role;
-      console.log(roleToUpdate);
+      // console.log(roleToUpdate);
 
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -110,9 +110,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/allclasses', async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
+
 
     // instructor
-
     app.get('/classes/:email', async (req, res) => {
       const email = req.params.email;
       // console.log(email);
