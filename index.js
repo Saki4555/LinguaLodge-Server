@@ -64,6 +64,24 @@ async function run() {
       res.send(result);
     });
 
+    // addmin works
+    app.patch('/users/role/:id', async (req, res) => {
+      const id = req.params.id;
+      let roleToUpdate = req.body.role;
+      console.log(roleToUpdate);
+
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: roleToUpdate
+        },
+      };
+
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
+
+
 
     // clasees ---------
 
@@ -85,10 +103,15 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/selected', async (req, res) => {
-      const result = await selectedClass.find().toArray();
+    app.get('/selected/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await selectedClass.find(query).toArray();
       res.send(result);
     });
+
+
+    // instructor
 
     app.get('/classes/:email', async (req, res) => {
       const email = req.params.email;
