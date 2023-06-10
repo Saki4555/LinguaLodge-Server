@@ -79,7 +79,25 @@ async function run() {
 
       const result = await usersCollection.updateOne(filter, updatedDoc);
       res.send(result);
-    })
+    });
+
+    app.patch('/classes/status/:id', async (req, res) => {
+      const id = req.params.id;
+      let roleToUpdate = req.body.status;
+      console.log(roleToUpdate);
+
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          status: roleToUpdate
+        },
+      };
+
+      const result = await classesCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+
 
 
 
