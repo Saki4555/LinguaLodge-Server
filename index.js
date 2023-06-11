@@ -36,6 +36,7 @@ async function run() {
     const classesCollection = client.db('lodgeDb').collection('classes');
     const selectedClass = client.db('lodgeDb').collection('selectedClass');
     const instructorCollection = client.db('lodgeDb').collection('instructor');
+    const paymentCollection = client.db('lodgeDb').collection('payments');
 
     // users ---------
 
@@ -125,12 +126,12 @@ async function run() {
 
     app.get('/selected/:email', async (req, res) => {
       const email = req.params.email;
-      const query = { email: email };
+      const query = { email: email, payment_status: { $exists: false } };
       const result = await selectedClass.find(query).toArray();
       res.send(result);
     });
 
-  
+
 
     app.get('/allclasses', async (req, res) => {
       const result = await classesCollection.find().toArray();
@@ -169,6 +170,8 @@ async function run() {
       res.send(result);
     });
 
+    // payments -----------
+
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       const amount = parseFloat(price * 100);
@@ -188,6 +191,38 @@ async function run() {
         clientSecret: paymentIntent.client_secret
       })
     });
+
+
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      // console.log(payment);
+      const id = payment.id;
+      const classId = payment.classId;
+      // console.log(payment.id);
+      // console.log(classId);
+
+
+      // classes -----------
+      const classQuery = { _id: new ObjectId(classId) };
+      const classUpdate = { $inc: { enrolled_student: 1 } };
+      const classesUpdateResult = await classesCollection.updateOne(classQuery, classUpdate);
+
+
+      // selected classes -----
+      const selectedClassQuery = { _id: new ObjectId(id) };
+      const selectedClassUpdate = { $set: { payment_status: 'paid' } };
+      const selectedClassUpdateResult = await selectedClass.updateOne(selectedClassQuery, selectedClassUpdate);
+
+
+      // payments -----------
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      // const query = { _id: new ObjectId(id) }
+      // const deleteResult = await selectedClass.deleteOne(query)
+
+      res.send({ insertResult, classesUpdateResult, selectedClassUpdateResult });
+    });
+
 
 
 
