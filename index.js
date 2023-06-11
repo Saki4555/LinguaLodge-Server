@@ -131,6 +131,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/enrolled/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email, payment_status: "paid" };
+      const result = await selectedClass.find(query).toArray();
+      res.send(result);
+    });
+
 
 
     app.get('/allclasses', async (req, res) => {
@@ -224,6 +231,13 @@ async function run() {
     });
 
 
+    app.get('/payments/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email}
+      const payments = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+      res.send(payments);
+    });
+    
 
 
 
