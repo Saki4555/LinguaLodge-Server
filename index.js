@@ -6,12 +6,18 @@ require('dotenv').config()
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
+
+const corsOptions = {
+  origin: 'https://assignment-12-e7bed.web.app',
+  methods: 'GET, POST, PUT, DELETE, PATCH',
+  allowedHeaders: 'Content-Type, Authorization'
+};
+
 // middlewares
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// lodgeUser
-// kaqkMyl6LX8Lrsc2
+
 
 
 
@@ -37,6 +43,7 @@ async function run() {
     const selectedClass = client.db('lodgeDb').collection('selectedClass');
     const instructorCollection = client.db('lodgeDb').collection('instructor');
     const paymentCollection = client.db('lodgeDb').collection('payments');
+    const studentsFeedbackCollection = client.db('lodgeDb').collection('studentsFeedback');
 
     // users ---------
 
@@ -62,10 +69,19 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/feedbacks', async (req, res) => {
+      const result = await studentsFeedbackCollection.find().toArray();
+      res.send(result);
+    });
+   
+
     app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
+
+   
 
     // addmin works
     app.patch('/users/role/:id', async (req, res) => {
@@ -100,6 +116,22 @@ async function run() {
       res.send(result);
     });
 
+    app.patch('/classes/feedback/:id', async (req, res) => {
+      const id = req.params.id;
+      let feedback = req.body.feedback;
+      console.log(feedback);
+
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          feedback: feedback
+        },
+      };
+
+      const result = await classesCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
 
 
 
@@ -107,7 +139,7 @@ async function run() {
     // clasees ---------
 
     app.get('/classes', async (req, res) => {
-      const result = await classesCollection.find({ status: 'Approved' }).toArray();
+      const result = await classesCollection.find({ status: 'Approved' }).sort({ enrolled_student: -1 }).toArray();
       res.send(result);
     });
 
@@ -168,6 +200,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/allinstructors', async (req, res) => {
+      const result = await instructorCollection.find().toArray();
+      res.send(result);
+    });
+
 
     app.delete('/selected/:id', async (req, res) => {
       const id = req.params.id;
@@ -188,7 +225,7 @@ async function run() {
         amount: amount,
         currency: 'usd',
         payment_method_types: ['card']
-      },
+      }
         // {
         //   apiKey: process.env.PAYMENT_SECRET_KEY
         // }
@@ -211,7 +248,7 @@ async function run() {
 
       // classes -----------
       const classQuery = { _id: new ObjectId(classId) };
-      const classUpdate = { $inc: { enrolled_student: 1 } };
+      const classUpdate = { $inc: { enrolled_student: 1, seat: -1 } };
       const classesUpdateResult = await classesCollection.updateOne(classQuery, classUpdate);
 
 
