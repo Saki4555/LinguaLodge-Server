@@ -7,14 +7,21 @@ const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 
-const corsOptions = {
-  origin: 'https://assignment-12-e7bed.web.app',
-  methods: 'GET, POST, PUT, DELETE, PATCH',
-  allowedHeaders: 'Content-Type, Authorization'
-};
+// const corsOptions = {
+//   origin: 'https://assignment-12-e7bed.web.app',
+//   methods: ['GET, POST, PUT, DELETE, PATCH'],
+//   allowedHeaders: ["Content-Type"],
+//   credentials: true,
+// };
 
 // middlewares
-app.use(cors(corsOptions));
+const corsOptions ={
+  origin:'*', 
+  credentials:true,
+  optionSuccessStatus:200,
+}
+
+app.use(cors(corsOptions))
 app.use(express.json());
 
 
@@ -35,7 +42,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect()
 
     // collections
     const usersCollection = client.db('lodgeDb').collection('users');
@@ -163,6 +170,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/payselected/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = {_id: new ObjectId(id) };
+      const result = await selectedClass.findOne(query);
+      res.send(result);
+    });
+
     app.get('/enrolled/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email, payment_status: "paid" };
@@ -219,13 +234,14 @@ async function run() {
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       const amount = parseFloat(price * 100);
+      console.log(amount);
 
       // console.log(price, amount);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
         payment_method_types: ['card']
-      }
+      },
         // {
         //   apiKey: process.env.PAYMENT_SECRET_KEY
         // }
